@@ -14,24 +14,28 @@
 
 name: "Push and Deploy"
 on:
-  push:
-    # run on pushes to main
-    branches:
-      - main
+    push:
+        # run on pushes to main
+        branches:
+            - main
 jobs:
-  push-deploy:
-    runs-on: [self-hosted, is-enabled]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Push latest images to GCR
-      timeout-minutes: 20
-      run: |
-        skaffold config set --global local-cluster false
-        # tag with git hash
-        skaffold build --default-repo=gcr.io/$PROJECT_ID \
-                       --tag=$GITHUB_SHA
-        # tag as latest
-        skaffold build --default-repo=gcr.io/$PROJECT_ID \
-                       --tag=latest
-      env:
-        PROJECT_ID: ${{ secrets.PROJECT_ID }}
+    push-deploy:
+        # runs-on: [self-hosted, is-enabled]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: yokawasa/action-setup-kube-tools@v0.7.1
+              with:
+                  skaffold: "1.37.0"
+            - name: Push latest images to GCR
+              timeout-minutes: 20
+              run: |
+                  skaffold config set --global local-cluster false
+                  # tag with git hash
+                  skaffold build --default-repo=gcr.io/$PROJECT_ID \
+                                 --tag=$GITHUB_SHA
+                  # tag as latest
+                  skaffold build --default-repo=gcr.io/$PROJECT_ID \
+                                 --tag=latest
+              env:
+                  PROJECT_ID: ${{ secrets.PROJECT_ID }}
